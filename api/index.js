@@ -18,6 +18,7 @@ const app = express();
 app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 app.use(express.json());
 app.use(cookieParser());
+app.use("/uploads", express.static("uploads"));
 
 mongoose.connect(
   "mongodb+srv://abdelrahmanayman8642:ru5phBlPjG8IJjEB@cluster0.fymrzt6.mongodb.net/"
@@ -87,6 +88,15 @@ app.post("/post", uploadMiddleware.single("file"), async (req, res) => {
     });
     res.json(postDoc);
   });
+});
+
+app.get("/post", async (req, res) => {
+  res.json(
+    await Post.find()
+      .populate("author", ["username"])
+      .sort({ createdAt: -1 })
+      .limit(20)
+  );
 });
 
 app.listen(4000);
