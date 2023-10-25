@@ -9,6 +9,7 @@ const cookieParser = require("cookie-parser");
 const multer = require("multer");
 const uploadMiddleware = multer({ dest: "uploads/" });
 const fs = require("fs");
+const path = require("path"); // Import the path module
 
 const salt = bcrypt.genSaltSync(10);
 const secret = "asdfe45we45w345wegw345werjktjwertkj";
@@ -103,6 +104,27 @@ app.get("/post/:id", async (req, res) => {
   const { id } = req.params;
   const postDoc = await Post.findById(id).populate("author", ["username"]);
   res.json(postDoc);
+});
+
+app.delete("/post/:id", async (req, res) => {
+  const { id } = req.params;
+  const postDoc = await Post.findById(id);
+  const coverField = postDoc.cover;
+  // Check if the 'coverField' exists and is a valid filename
+  if (coverField) {
+    const pathToDelete = path.join(__dirname, coverField); // Construct the full path to the file
+
+    // Use the 'fs' module to delete the file
+    fs.unlink(pathToDelete, (err) => {
+      if (err) {
+        console.error(`Error deleting file: ${err}`);
+      } else {
+        console.log(`File ${coverField} deleted successfully.`);
+      }
+    });
+  }
+  await postDoc.deleteOne();
+  res.json(coverField);
 });
 
 app.listen(4000);

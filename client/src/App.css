@@ -152,6 +152,17 @@ div.post-page a.edit-btn {
   border-radius: 5px;
   text-decoration: none;
 }
+div.post-page a.delete-btn {
+  background-color: #a10000;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #fff;
+  padding: 15px 30px;
+  border-radius: 5px;
+  text-decoration: none;
+  margin-left: 10px;
+}
 a svg {
   height: 20px;
 }
