@@ -26,10 +26,13 @@ mongoose.connect(
 );
 
 app.use("/register", async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, email, firstname, lastname } = req.body;
   try {
     const userDoc = await User.create({
       username,
+      email,
+      firstname,
+      lastname,
       password: bcrypt.hashSync(password, salt),
     });
     res.json(userDoc);
@@ -62,7 +65,7 @@ app.get("/profile", (req, res) => {
   try {
     const decoded = jwt.verify(token, secret, {});
   } catch (err) {
-    res.json(info);
+    res.json(err);
   }
 });
 
