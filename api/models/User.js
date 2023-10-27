@@ -7,6 +7,8 @@ const UserSchema = new Schema({
   firstname: { type: String, required: true },
   lastname: { type: String, required: true },
   password: { type: String, required: true },
+  resetCode: { type: String },
+  resetCodeExpiration: { type: Date },
 });
 
 // Define a unique index on the username field

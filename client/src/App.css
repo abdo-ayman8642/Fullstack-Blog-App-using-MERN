@@ -166,3 +166,24 @@ div.post-page a.delete-btn {
 a svg {
   height: 20px;
 }
+
+/* Style the container */
+.password-input-container {
+  position: relative;
+}
+
+/* Style the password toggle icon */
+.password-toggle-icon {
+  position: absolute;
+  top: 50%;
+  right: 10px; /* Adjust the right value for your preferred position */
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #333; /* Adjust the color as needed */
+  font-size: 1.25rem; /* Adjust the font size as needed */
+}
+
+/* Optional: Style the icon on hover */
+.password-toggle-icon:hover {
+  color: #007bff; /* Change the color on hover */
+}

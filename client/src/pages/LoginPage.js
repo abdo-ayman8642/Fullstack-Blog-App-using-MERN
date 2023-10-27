@@ -17,6 +17,11 @@ function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [redirect, setRedirect] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
   const { setUserInfo, userInfo } = useContext(UserContext);
 
   async function login(ev) {
@@ -87,25 +92,31 @@ function LoginPage() {
               value={username}
               onChange={(ev) => setUsername(ev.target.value)}
             />
-            <MDBInput
-              wrapperClass="mb-4"
-              label="Password"
-              id="formControlLg"
-              type="password"
-              size="lg"
-              required
-              value={password}
-              onChange={(ev) => setPassword(ev.target.value)}
-            />
-
-            <div className="d-flex justify-content-between mb-4">
-              <MDBCheckbox
-                name="flexCheck"
-                value=""
-                id="flexCheckDefault"
-                label="Remember me"
+            <div className="password-input-container">
+              <MDBInput
+                wrapperClass="mb-4"
+                label="Password"
+                id="formControlLg"
+                type={showPassword ? "text" : "password"}
+                size="lg"
+                required
+                value={password}
+                onChange={(ev) => setPassword(ev.target.value)}
               />
-              <a href="!#">Forgot password?</a>
+              <span
+                className="password-toggle-icon"
+                onClick={togglePasswordVisibility}
+              >
+                {showPassword ? (
+                  <i className="far fa-eye-slash"></i>
+                ) : (
+                  <i className="far fa-eye" style={{ opacity: "0.5" }}></i>
+                )}
+              </span>
+            </div>
+
+            <div className=" mb-4">
+              <Link to={"/forget"}>Forgot password?</Link>
             </div>
 
             <div className="text-center text-md-start mt-4 pt-2">

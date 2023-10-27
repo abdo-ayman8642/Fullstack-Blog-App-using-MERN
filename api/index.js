@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+const nodemailer = require("nodemailer");
 const User = require("./models/User");
 const Post = require("./models/Post");
 const bcrypt = require("bcryptjs");
@@ -19,11 +21,17 @@ const app = express();
 app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 app.use(express.json());
 app.use(cookieParser());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/uploads", express.static("uploads"));
 
 mongoose.connect(
   "mongodb+srv://abdelrahmanayman8642:ru5phBlPjG8IJjEB@cluster0.fymrzt6.mongodb.net/"
 );
+
+function generateTemporaryPassword() {
+  // Generate a random temporary password (e.g., 8 characters)
+  return Math.random().toString(36).substring(2, 10);
+}
 
 app.use("/register", async (req, res) => {
   const { username, password, email, firstname, lastname } = req.body;
@@ -45,8 +53,11 @@ app.use("/register", async (req, res) => {
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   const userDoc = await User.findOne({ username });
-  !userDoc && res.status(400).json("wrong credentials");
-  const passOk = bcrypt.compareSync(password, userDoc.password);
+  if (!userDoc) {
+    res.status(404).json("wrong credentials");
+    return;
+  }
+  const passOk = bcrypt.compareSync(password, userDoc?.password);
   if (passOk) {
     jwt.sign({ username, id: userDoc._id }, secret, {}, (err, token) => {
       if (err) throw err;
@@ -160,6 +171,101 @@ app.delete("/post/:id", async (req, res) => {
   }
   await postDoc.deleteOne();
   res.json(coverField);
+});
+
+const transporter = nodemailer.createTransport({
+  service: "Gmail",
+  auth: {
+    user: "abdelrahman.ayman8642@gmail.com", // Replace with your actual email address
+    pass: "cfxh zode ckxq jawp", // Replace with your actual password or an app-specific password
+  },
+});
+
+async function sendEmail(mailOptions) {
+  try {
+    // Send the email
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email sent: " + info.response);
+  } catch (error) {
+    console.error("Error sending email: " + error);
+  }
+}
+
+function generateUniqueCode() {
+  return Math.floor(100000 + Math.random() * 900000);
+}
+
+app.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+
+  const resetCode = generateUniqueCode();
+
+  // Calculate the reset code expiration time (e.g., 1 hour from now)
+  const resetCodeExpiration = new Date();
+  resetCodeExpiration.setHours(resetCodeExpiration.getHours() + 1);
+
+  // Check if the email exists in the database
+  const user = await User.findOne({ email });
+
+  if (user) {
+    // Generate a new temporary password
+    user.resetCode = resetCode;
+    user.resetCodeExpiration = resetCodeExpiration;
+    await user.save();
+
+    // Compose the email
+    const mailOptions = {
+      from: "abdelrahman20191700333@cis.asu.edu.eg", // Replace with your actual email address
+      to: email,
+      subject: "Password Reset",
+      text: `Your reset code is: ${resetCode}. Use this code to reset your password.`,
+    };
+
+    // Send the email
+    await sendEmail(mailOptions);
+
+    // Provide feedback to the user
+    res.send("Password reset email sent");
+  } else {
+    // Handle the case when the email is not found
+    res.send("Email not found");
+  }
+});
+
+app.post("/reset-password", async (req, res) => {
+  const { email, resetCode, newPassword } = req.body;
+
+  try {
+    // Find the user by their email
+    const user = await User.findOne({ email });
+
+    if (user) {
+      // Check if the reset code matches and is not expired
+      if (
+        user.resetCode === resetCode &&
+        user.resetCodeExpiration > new Date()
+      ) {
+        // Reset the user's password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+        user.resetCode = undefined;
+        user.resetCodeExpiration = undefined;
+
+        // Save the updated user document with the new password
+        await user.save();
+
+        // Provide feedback to the user
+        res.send("Password reset successful");
+      } else {
+        res.status(400).send("Invalid or expired reset code");
+      }
+    } else {
+      res.status(404).send("Email not found");
+    }
+  } catch (error) {
+    console.error("Error resetting password or updating database: " + error);
+    res.status(500).send("An error occurred while resetting the password.");
+  }
 });
 
 app.listen(4000);

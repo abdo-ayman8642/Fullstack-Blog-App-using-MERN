@@ -23,22 +23,42 @@ function RegisterPage() {
   const [lastname, setLastname] = useState("");
   const [redirect, setRedirect] = useState(false);
   const [showAlert, setShowAlert] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [errorConfirm, setErrorConfirm] = useState("");
+
+  const togglePasswordVisibility = (field) => {
+    field === "password"
+      ? setShowPassword(!showPassword)
+      : setShowConfirmPassword(!showConfirmPassword);
+  };
 
   async function register(ev) {
     ev.preventDefault();
+
+    if (error || errorConfirm) return;
     const response = await fetch("http://localhost:4000/register", {
       method: "POST",
       body: JSON.stringify({ username, password, email, firstname, lastname }),
       headers: { "Content-Type": "application/json" },
     });
+    const json = await response.json();
     if (response.status === 200) {
-      setShowAlert("ok");
+      setShowAlert({ status: "ok" });
       setTimeout(() => {
         setShowAlert(null);
       }, 2000);
       setRedirect(true);
     } else {
-      setShowAlert("no");
+      if (json.code === 11000) {
+        const keys = Object.keys(json.keyPattern);
+
+        if (keys.length > 0) {
+          const key = keys[0];
+          setShowAlert({ status: "no", message: `This ${key} is taken` });
+        }
+      } else setShowAlert({ status: "no", message: `Something went wrong` });
       setTimeout(() => {
         setShowAlert(null);
       }, 2000);
@@ -47,6 +67,33 @@ function RegisterPage() {
   // if (redirect) {
   //   return <Navigate to={"/login"} />;
   // }
+
+  const validatePassword = (password) => {
+    // Use a regular expression to check for the required criteria
+    if (!password) return true;
+
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+    return regex.test(password);
+  };
+
+  const onChangePassword = (password) => {
+    console.log(password);
+    setPassword(password);
+
+    validatePassword(password)
+      ? setError("")
+      : setError(
+          "Password must contain at least one uppercase letter, one lowercase letter, and one numerical character."
+        );
+  };
+  const onChangeConfirmPassword = (confirmedPassword) => {
+    setConfirmPassword(confirmedPassword);
+
+    confirmedPassword === password || confirmedPassword === ""
+      ? setErrorConfirm("")
+      : setErrorConfirm("Entered Password are not matched");
+  };
+
   return (
     <>
       {redirect ? (
@@ -60,6 +107,7 @@ function RegisterPage() {
               <div>Successfully Added User</div>
             </div>
           )}
+
           <img src={successImg} style={{ width: "40%" }} />
           <div
             style={{
@@ -88,15 +136,15 @@ function RegisterPage() {
           {showAlert && (
             <div
               class={`alert alert-${
-                showAlert === "ok" ? "success" : "danger"
+                showAlert.status === "ok" ? "success" : "danger"
               } d-inline-block p-4`}
               style={{ position: "absolute", right: "20px", bottom: 0 }}
               role="alert"
             >
               <div>
-                {showAlert === "ok"
+                {showAlert.status === "ok"
                   ? "Successfully Added User"
-                  : "Error Adding User"}
+                  : showAlert.message}
               </div>
             </div>
           )}
@@ -155,24 +203,73 @@ function RegisterPage() {
                   onChange={(ev) => setUsername(ev.target.value)}
                   required
                 />
-                <MDBInput
-                  wrapperClass="mb-4"
-                  label="Password"
-                  id="form1"
-                  type="password"
-                  value={password}
-                  onChange={(ev) => setPassword(ev.target.value)}
-                  required
-                />
-                <MDBInput
-                  wrapperClass="mb-4"
-                  label="Confirm Password"
-                  id="form1"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(ev) => setConfirmPassword(ev.target.value)}
-                  required
-                />
+                <div className="password-input-container">
+                  <MDBInput
+                    wrapperClass={`mb-${error ? "1" : "4"}`}
+                    label="Password"
+                    id="form1"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(ev) => onChangePassword(ev.target.value)}
+                    required
+                  >
+                    <span
+                      className="password-toggle-icon"
+                      onClick={() => togglePasswordVisibility("password")}
+                    >
+                      {showPassword ? (
+                        <i className="far fa-eye-slash"></i>
+                      ) : (
+                        <i
+                          className="far fa-eye"
+                          style={{ opacity: "0.5" }}
+                        ></i>
+                      )}
+                    </span>
+                  </MDBInput>
+
+                  {error && (
+                    <div
+                      className="error-message text-start mb-2"
+                      style={{ fontSize: "12px", color: "red", opacity: 0.7 }}
+                    >
+                      {error}
+                    </div>
+                  )}
+                </div>
+                <div className="password-input-container">
+                  <MDBInput
+                    wrapperClass={`mb-${errorConfirm ? "1" : "4"}`}
+                    label="Confirm Password"
+                    id="form1"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(ev) => onChangeConfirmPassword(ev.target.value)}
+                    required
+                  >
+                    <span
+                      className="password-toggle-icon"
+                      onClick={() => togglePasswordVisibility("confirm")}
+                    >
+                      {showConfirmPassword ? (
+                        <i className="far fa-eye-slash"></i>
+                      ) : (
+                        <i
+                          className="far fa-eye"
+                          style={{ opacity: "0.5" }}
+                        ></i>
+                      )}
+                    </span>
+                  </MDBInput>
+                  {errorConfirm && (
+                    <div
+                      className="error-message text-start mb-2"
+                      style={{ fontSize: "12px", color: "red", opacity: 0.7 }}
+                    >
+                      {errorConfirm}
+                    </div>
+                  )}
+                </div>
 
                 <MDBBtn className="w-100 mb-4" size="md" type="submit">
                   sign up
