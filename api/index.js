@@ -23,6 +23,7 @@ app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.use("/uploads", express.static("uploads"));
 
 mongoose.connect(
@@ -122,6 +123,41 @@ app.get("/profile/:id", async (req, res) => {
     res.status(404).json(null);
   }
 });
+
+app.put("/profile/:id", async (req, res) => {
+  const { id } = req.params;
+  const { token } = req.cookies;
+  const {
+    title,
+    password,
+    firstName,
+    lastName,
+    email,
+    phone,
+    address,
+    changePassword,
+    currentPassword,
+  } = req.body;
+  try {
+    const decoded = jwt.verify(token, secret, {});
+    console.log(decoded);
+    const user = await User.findById(decoded.id);
+    console.log(user);
+    user.title = title;
+    user.firstName = firstName;
+    user.lastName = lastName;
+    user.email = email;
+    user.phone = phone;
+    user.address = address;
+
+    await user.save();
+
+    res.status(200).json({ message: "User updated successfully", user });
+  } catch (err) {
+    res.status(404).json(null);
+  }
+});
+
 app.delete("/profile/:id", async (req, res) => {
   const { id } = req.params;
   const { token } = req.cookies;

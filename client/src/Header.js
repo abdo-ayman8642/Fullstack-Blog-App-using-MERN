@@ -117,12 +117,6 @@ export default function Header() {
 
             <Divider />
 
-            <MenuItem onClick={handleClose}>
-              <ListItemIcon>
-                <Settings fontSize="small" />
-              </ListItemIcon>
-              Settings
-            </MenuItem>
             <MenuItem onClick={logout}>
               <ListItemIcon>
                 <Logout fontSize="small" />
