@@ -11,9 +11,11 @@ const cookieParser = require("cookie-parser");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
+require("dotenv").config();
+console.log(process.env);
 
 const salt = bcrypt.genSaltSync(10);
-const secret = "asdfe45we45w345wegw345werjktjwertkj";
+const secret = process.env.SECRET;
 const ObjectId = mongoose.Types.ObjectId;
 const uploadMiddleware = multer({ dest: "uploads/" });
 
@@ -26,9 +28,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use("/uploads", express.static("uploads"));
 
-mongoose.connect(
-  "mongodb+srv://abdelrahmanayman8642:ru5phBlPjG8IJjEB@cluster0.fymrzt6.mongodb.net/"
-);
+mongoose.connect(process.env.MONGO_CONNECTION);
 
 User.schema.pre("remove", function (next) {
   const user = this;
@@ -337,7 +337,7 @@ const transporter = nodemailer.createTransport({
   service: "Gmail",
   auth: {
     user: "abdelrahman.ayman8642@gmail.com",
-    pass: "cfxh zode ckxq jawp",
+    pass: process.env.GOOGLE_APPS_PASSWORD,
   },
 });
 
