@@ -18,7 +18,7 @@ export default function Post({
 }) {
   const { userInfo } = useContext(UserContext);
   const authorTrue =
-    (userInfo?._id || userInfo?.id) === (author._id || author.id);
+    userInfo && (userInfo?._id || userInfo?.id) === (author?._id || author?.id);
   return (
     <div className="post">
       <div className="image">
@@ -68,7 +68,7 @@ export default function Post({
         </h2>
 
         <p className="info">
-          <a className="author">{author.username}</a>
+          <a className="author">{author?.username}</a>
           <time>{formatISO9075(new Date(createdAt))}</time>
         </p>
         <p className="summary">{summary}</p>

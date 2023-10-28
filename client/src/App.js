@@ -10,6 +10,7 @@ import CreatePost from "./pages/CreatePost";
 import RegisterPage from "./pages/RegisterPage";
 import ForgotPassword from "./pages/ForgetPassword";
 import ResetPassword from "./pages/ResetPassword";
+import ProfilePage from "./pages/Profile";
 
 function App() {
   return (
@@ -19,8 +20,8 @@ function App() {
           <Route index element={<IndexPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/profile/:id" element={<ProfilePage />} />
           <Route path="/forget" element={<ForgotPassword />} />
-          <Route path="/reset" element={<ResetPassword />} />
           <Route path="/create" element={<CreatePost />} />
           <Route path="/post/:id" element={<PostPage />} />
           <Route path="/edit/:id" element={<EditPost />} />

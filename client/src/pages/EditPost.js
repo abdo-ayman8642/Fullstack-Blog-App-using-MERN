@@ -29,7 +29,6 @@ export default function EditPost() {
     fetch("http://localhost:4000/post/" + id, { credentials: "include" }).then(
       (response) => {
         response.json().then((postInfo) => {
-          console.log(postInfo);
           setTitle(postInfo.title);
           setContent(postInfo.content);
           setSummary(postInfo.summary);

@@ -9,11 +9,15 @@ const UserSchema = new Schema({
   password: { type: String, required: true },
   resetCode: { type: String },
   resetCodeExpiration: { type: Date },
+  address: { type: String },
+  phone: { type: String },
+  title: { type: String, required: true },
 });
 
 // Define a unique index on the username field
 UserSchema.index({ username: 1 }, { unique: true });
 
-const UserModel = model("User", UserSchema);
+module.exports = UserSchema;
+// const UserModel = model("User", UserSchema);
 
-module.exports = UserModel;
+// module.exports = UserModel;

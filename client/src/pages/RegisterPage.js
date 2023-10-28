@@ -21,6 +21,9 @@ function RegisterPage() {
   const [email, setEmail] = useState("");
   const [firstname, setFirstname] = useState("");
   const [lastname, setLastname] = useState("");
+  const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
+  const [title, setTitle] = useState("");
   const [redirect, setRedirect] = useState(false);
   const [showAlert, setShowAlert] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -40,7 +43,16 @@ function RegisterPage() {
     if (error || errorConfirm) return;
     const response = await fetch("http://localhost:4000/register", {
       method: "POST",
-      body: JSON.stringify({ username, password, email, firstname, lastname }),
+      body: JSON.stringify({
+        username,
+        password,
+        email,
+        firstname,
+        lastname,
+        address,
+        phone,
+        title,
+      }),
       headers: { "Content-Type": "application/json" },
     });
     const json = await response.json();
@@ -188,7 +200,15 @@ function RegisterPage() {
                     />
                   </MDBCol>
                 </MDBRow>
-
+                <MDBInput
+                  wrapperClass="mb-4"
+                  label="title"
+                  id="form1"
+                  type="text"
+                  value={title}
+                  onChange={(ev) => setTitle(ev.target.value)}
+                  required
+                />
                 <MDBInput
                   wrapperClass="mb-4"
                   label="Email"
@@ -206,6 +226,24 @@ function RegisterPage() {
                   value={username}
                   onChange={(ev) => setUsername(ev.target.value)}
                   required
+                />
+                <MDBInput
+                  wrapperClass="mb-4"
+                  label="Address"
+                  id="form1"
+                  type="text"
+                  value={address}
+                  onChange={(ev) => setAddress(ev.target.value)}
+                  required
+                />
+                <MDBInput
+                  wrapperClass="mb-4"
+                  label="Phone Number"
+                  id="form1"
+                  type="number"
+                  min={7}
+                  value={phone}
+                  onChange={(ev) => setPhone(ev.target.value)}
                 />
                 <div className="password-input-container">
                   <MDBInput

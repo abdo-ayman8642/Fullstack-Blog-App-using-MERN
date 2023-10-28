@@ -34,7 +34,7 @@ export default function Header() {
         const userData = await response.json();
         setUserInfo(userData);
       } catch (err) {
-        console.log(err);
+        setUserInfo(null);
       }
     };
     fetchData();
@@ -103,9 +103,17 @@ export default function Header() {
       >
         {username ? (
           <>
-            <MenuItem onClick={handleClose}>
-              <Avatar /> Profile
-            </MenuItem>
+            <Link
+              to={`/profile/${userInfo?.id || userInfo?._id}`}
+              style={{
+                textDecoration: "none", // Remove underline
+                color: "inherit", // Inherit text color
+              }}
+            >
+              <MenuItem>
+                <Avatar /> Profile
+              </MenuItem>
+            </Link>
 
             <Divider />
 

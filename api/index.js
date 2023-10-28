@@ -4,8 +4,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
-const User = require("./models/User");
-const Post = require("./models/Post");
+const { User, Post } = require("./models/index");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
@@ -30,8 +29,30 @@ mongoose.connect(
   "mongodb+srv://abdelrahmanayman8642:ru5phBlPjG8IJjEB@cluster0.fymrzt6.mongodb.net/"
 );
 
+User.schema.pre("remove", function (next) {
+  const user = this;
+  const userId = user._id;
+
+  // Remove the associated posts
+  Post.deleteMany({ author: userId }, (err) => {
+    if (err) {
+      return next(err);
+    }
+    next();
+  });
+});
+
 app.use("/register", async (req, res) => {
-  const { username, password, email, firstname, lastname } = req.body;
+  const {
+    username,
+    password,
+    email,
+    firstname,
+    lastname,
+    address,
+    phone,
+    title,
+  } = req.body;
   try {
     const userDoc = await User.create({
       username,
@@ -39,10 +60,12 @@ app.use("/register", async (req, res) => {
       firstname,
       lastname,
       password: bcrypt.hashSync(password, salt),
+      address,
+      phone,
+      title,
     });
     res.json(userDoc);
   } catch (e) {
-    console.log(e);
     res.status(400).json(e);
   }
 });
@@ -84,7 +107,62 @@ app.get("/profile", async (req, res) => {
     const user = await User.findOne({ username: decoded.username });
     res.status(200).json(user);
   } catch (err) {
-    res.json(err);
+    res.status(403).json(null);
+  }
+});
+
+app.get("/profile/:id", async (req, res) => {
+  const { id } = req.params;
+  const { token } = req.cookies;
+  try {
+    const decoded = jwt.verify(token, secret, {});
+    const user = await User.findById(id);
+    res.status(200).json(user);
+  } catch (err) {
+    res.status(404).json(null);
+  }
+});
+app.delete("/profile/:id", async (req, res) => {
+  const { id } = req.params;
+  const { token } = req.cookies;
+  try {
+    const decoded = jwt.verify(token, secret, {});
+    // Find and remove all posts with the user's ID
+    const authorObject = new ObjectId(decoded.id);
+    const posts = await Post.find({ author: authorObject });
+
+    // Delete the cover images and the posts
+    for (const post of posts) {
+      // Delete the cover image file from the "uploads" folder
+      const coverImageFileName = post.cover;
+      try {
+        if (coverImageFileName) {
+          fs.unlink(path.join(__dirname, coverImageFileName), (err) => {
+            if (err) {
+              console.error(`Error deleting cover image: ${err}`);
+            }
+          });
+        }
+      } catch (err) {
+        continue;
+      }
+    }
+
+    // Remove the post
+    await Post.deleteMany({ author: decoded.id });
+
+    // Remove the user
+    const user = await User.findByIdAndRemove(decoded.id);
+    if (!user) {
+      return res.status(404).json(null);
+    }
+
+    res
+      .status(200)
+      .cookie("token", "")
+      .json({ message: "User Successefully Removed", user });
+  } catch (err) {
+    res.status(404).json(null);
   }
 });
 

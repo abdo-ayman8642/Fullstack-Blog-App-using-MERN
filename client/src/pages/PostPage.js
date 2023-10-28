@@ -15,7 +15,6 @@ export default function PostPage() {
     fetch(`http://localhost:4000/post/${id}`, { credentials: "include" }).then(
       (response) => {
         response.json().then((postInfo) => {
-          console.log(postInfo);
           setPostInfo(postInfo);
           setLoading(false);
         });
@@ -27,7 +26,6 @@ export default function PostPage() {
     const response = await fetch(`http://localhost:4000/post/${id}`, {
       method: "DELETE",
     });
-    console.log(response);
     setRedirect(true);
   };
 
