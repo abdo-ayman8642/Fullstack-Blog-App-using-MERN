@@ -12,7 +12,6 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
-console.log(process.env);
 
 const salt = bcrypt.genSaltSync(10);
 const secret = process.env.SECRET;
