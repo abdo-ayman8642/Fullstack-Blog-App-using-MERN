@@ -4,6 +4,15 @@ import Editor from "../Editor";
 import Switch from "@mui/material/Switch";
 import PublicIcon from "@mui/icons-material/Public";
 import LockPersonIcon from "@mui/icons-material/LockPerson";
+import {
+  MDBContainer,
+  MDBCol,
+  MDBRow,
+  MDBBtn,
+  MDBIcon,
+  MDBInput,
+  MDBCheckbox,
+} from "mdb-react-ui-kit";
 
 const label = { inputProps: { "aria-label": "Switch demo" } };
 
@@ -17,14 +26,17 @@ export default function EditPost() {
   const [redirect, setRedirect] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:4000/post/" + id).then((response) => {
-      response.json().then((postInfo) => {
-        setTitle(postInfo.title);
-        setContent(postInfo.content);
-        setSummary(postInfo.summary);
-        setPublicPost(postInfo.public);
-      });
-    });
+    fetch("http://localhost:4000/post/" + id, { credentials: "include" }).then(
+      (response) => {
+        response.json().then((postInfo) => {
+          console.log(postInfo);
+          setTitle(postInfo.title);
+          setContent(postInfo.content);
+          setSummary(postInfo.summary);
+          setPublicPost(postInfo.public);
+        });
+      }
+    );
   }, []);
 
   async function updatePost(ev) {
@@ -54,19 +66,33 @@ export default function EditPost() {
 
   return (
     <form onSubmit={updatePost}>
-      <input
-        type="title"
-        placeholder={"Title"}
+      <MDBInput
+        wrapperClass="mb-3"
+        label="Title"
+        id="formControlLg"
+        type="text"
+        size="lg"
+        required
         value={title}
         onChange={(ev) => setTitle(ev.target.value)}
       />
-      <input
-        type="summary"
-        placeholder={"Summary"}
+
+      <MDBInput
+        wrapperClass="mb-3"
+        label="Summary"
+        id="formControlLg"
+        type="text"
+        size="lg"
+        required
         value={summary}
         onChange={(ev) => setSummary(ev.target.value)}
       />
-      <input type="file" onChange={(ev) => setFiles(ev.target.files)} />
+      <input
+        type="file"
+        class="form-control mb-3"
+        id="customFile"
+        onChange={(ev) => setFiles(ev.target.files)}
+      />
       <Editor onChange={setContent} value={content} />
       <div
         style={{
@@ -87,11 +113,13 @@ export default function EditPost() {
           </div>
         ) : (
           <div>
-            Private <LockPersonIcon sx={{ ml: "0.5rem" }} />
+            Only Me <LockPersonIcon sx={{ ml: "0.5rem" }} />
           </div>
         )}
       </div>
-      <button style={{ marginTop: "5px" }}>Update post</button>
+      <MDBBtn className="mb-0 px-5 mt-2" size="lg" type="submit">
+        Update post
+      </MDBBtn>
     </form>
   );
 }

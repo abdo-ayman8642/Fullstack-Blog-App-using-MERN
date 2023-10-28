@@ -5,6 +5,15 @@ import Editor from "../Editor";
 import Switch from "@mui/material/Switch";
 import PublicIcon from "@mui/icons-material/Public";
 import LockPersonIcon from "@mui/icons-material/LockPerson";
+import {
+  MDBContainer,
+  MDBCol,
+  MDBRow,
+  MDBBtn,
+  MDBIcon,
+  MDBInput,
+  MDBCheckbox,
+} from "mdb-react-ui-kit";
 
 const label = { inputProps: { "aria-label": "Switch demo" } };
 
@@ -38,19 +47,33 @@ export default function CreatePost() {
   }
   return (
     <form onSubmit={createNewPost}>
-      <input
-        type="title"
-        placeholder={"Title"}
+      <MDBInput
+        wrapperClass="mb-3"
+        label="Title"
+        id="formControlLg"
+        type="text"
+        size="lg"
+        required
         value={title}
         onChange={(ev) => setTitle(ev.target.value)}
       />
-      <input
-        type="summary"
-        placeholder={"Summary"}
+      <MDBInput
+        wrapperClass="mb-3"
+        label="Summary"
+        id="formControlLg"
+        type="text"
+        size="lg"
+        required
         value={summary}
         onChange={(ev) => setSummary(ev.target.value)}
       />
-      <input type="file" onChange={(ev) => setFiles(ev.target.files)} />
+
+      <input
+        type="file"
+        class="form-control mb-3"
+        id="customFile"
+        onChange={(ev) => setFiles(ev.target.files)}
+      />
       <Editor value={content} onChange={setContent} />
       <div
         style={{
@@ -71,12 +94,14 @@ export default function CreatePost() {
           </div>
         ) : (
           <div>
-            Private <LockPersonIcon sx={{ ml: "0.5rem" }} />
+            Only Me <LockPersonIcon sx={{ ml: "0.5rem" }} />
           </div>
         )}
       </div>
 
-      <button style={{ marginTop: "1rem" }}>Create post</button>
+      <MDBBtn className="mb-0 px-5 mt-2" size="lg" type="submit">
+        Create post
+      </MDBBtn>
     </form>
   );
 }

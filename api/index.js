@@ -1,7 +1,7 @@
+// imports
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const ObjectId = mongoose.Types.ObjectId;
 const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
 const User = require("./models/User");
@@ -10,12 +10,13 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const multer = require("multer");
-const uploadMiddleware = multer({ dest: "uploads/" });
 const fs = require("fs");
-const path = require("path"); // Import the path module
+const path = require("path");
 
 const salt = bcrypt.genSaltSync(10);
 const secret = "asdfe45we45w345wegw345werjktjwertkj";
+const ObjectId = mongoose.Types.ObjectId;
+const uploadMiddleware = multer({ dest: "uploads/" });
 
 const app = express();
 
@@ -28,11 +29,6 @@ app.use("/uploads", express.static("uploads"));
 mongoose.connect(
   "mongodb+srv://abdelrahmanayman8642:ru5phBlPjG8IJjEB@cluster0.fymrzt6.mongodb.net/"
 );
-
-function generateTemporaryPassword() {
-  // Generate a random temporary password (e.g., 8 characters)
-  return Math.random().toString(36).substring(2, 10);
-}
 
 app.use("/register", async (req, res) => {
   const { username, password, email, firstname, lastname } = req.body;
@@ -177,6 +173,7 @@ app.put("/post", uploadMiddleware.single("file"), async (req, res) => {
     const { id, title, summary, content, public } = req.body;
     const postDoc = await Post.findById(id);
 
+    const oldImage = postDoc.cover;
     await postDoc.updateOne({
       title,
       summary,
@@ -184,6 +181,18 @@ app.put("/post", uploadMiddleware.single("file"), async (req, res) => {
       cover: newPath ? newPath : postDoc.cover,
       public,
     });
+    if (newPath) {
+      const pathToDelete = path.join(__dirname, oldImage);
+
+      // Use the 'fs' module to delete the file
+      fs.unlink(pathToDelete, (err) => {
+        if (err) {
+          console.error(`Error deleting file: ${err}`);
+        } else {
+          console.log(`File ${oldImage} deleted successfully.`);
+        }
+      });
+    }
 
     res.json(postDoc);
   });
@@ -213,8 +222,8 @@ app.delete("/post/:id", async (req, res) => {
 const transporter = nodemailer.createTransport({
   service: "Gmail",
   auth: {
-    user: "abdelrahman.ayman8642@gmail.com", // Replace with your actual email address
-    pass: "cfxh zode ckxq jawp", // Replace with your actual password or an app-specific password
+    user: "abdelrahman.ayman8642@gmail.com",
+    pass: "cfxh zode ckxq jawp",
   },
 });
 
@@ -235,17 +244,16 @@ function generateUniqueCode() {
 app.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
 
-  const resetCode = generateUniqueCode();
-
-  // Calculate the reset code expiration time (e.g., 1 hour from now)
-  const resetCodeExpiration = new Date();
-  resetCodeExpiration.setHours(resetCodeExpiration.getHours() + 1);
-
   // Check if the email exists in the database
   const user = await User.findOne({ email });
 
   if (user) {
-    // Generate a new temporary password
+    const resetCode = generateUniqueCode();
+
+    // Calculate the reset code expiration time (e.g., 1 hour from now)
+    const resetCodeExpiration = new Date();
+    resetCodeExpiration.setHours(resetCodeExpiration.getHours() + 1);
+
     user.resetCode = resetCode;
     user.resetCodeExpiration = resetCodeExpiration;
     await user.save();
@@ -290,7 +298,6 @@ app.post("/reset-password", async (req, res) => {
         // Save the updated user document with the new password
         await user.save();
 
-        // Provide feedback to the user
         res.send("Password reset successful");
       } else {
         res.status(400).send("Invalid or expired reset code");
