@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import Editor from "../Editor";
+import Switch from "@mui/material/Switch";
+import PublicIcon from "@mui/icons-material/Public";
+import LockPersonIcon from "@mui/icons-material/LockPerson";
+
+const label = { inputProps: { "aria-label": "Switch demo" } };
 
 export default function EditPost() {
   const { id } = useParams();
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [content, setContent] = useState("");
+  const [publicPost, setPublicPost] = useState(true);
   const [files, setFiles] = useState("");
   const [redirect, setRedirect] = useState(false);
 
@@ -16,6 +22,7 @@ export default function EditPost() {
         setTitle(postInfo.title);
         setContent(postInfo.content);
         setSummary(postInfo.summary);
+        setPublicPost(postInfo.public);
       });
     });
   }, []);
@@ -27,6 +34,7 @@ export default function EditPost() {
     data.set("summary", summary);
     data.set("content", content);
     data.set("id", id);
+    data.set("public", publicPost);
     if (files?.[0]) {
       data.set("file", files?.[0]);
     }
@@ -60,6 +68,29 @@ export default function EditPost() {
       />
       <input type="file" onChange={(ev) => setFiles(ev.target.files)} />
       <Editor onChange={setContent} value={content} />
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "1rem",
+          marginTop: "1rem",
+        }}
+      >
+        <Switch
+          {...label}
+          checked={publicPost}
+          onChange={() => setPublicPost((prev) => !prev)}
+        />
+        {publicPost ? (
+          <div>
+            Public <PublicIcon sx={{ ml: "0.5rem" }} />
+          </div>
+        ) : (
+          <div>
+            Private <LockPersonIcon sx={{ ml: "0.5rem" }} />
+          </div>
+        )}
+      </div>
       <button style={{ marginTop: "5px" }}>Update post</button>
     </form>
   );

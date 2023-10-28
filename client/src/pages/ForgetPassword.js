@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { Navigate } from "react-router-dom";
+import ResetPassword from "./ResetPassword";
+import { MDBInput, MDBBtn } from "mdb-react-ui-kit";
 
 function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const [redirect, setRedirect] = useState(false);
 
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
@@ -22,6 +26,9 @@ function ForgotPassword() {
 
       if (response.ok) {
         setMessage("Password reset email sent.");
+        setTimeout(() => {
+          setRedirect(true);
+        }, 2000);
       } else {
         setMessage("Email not found or an error occurred.");
       }
@@ -31,15 +38,28 @@ function ForgotPassword() {
     }
   };
 
+  if (redirect) {
+    return <ResetPassword email={email} />;
+  }
   return (
     <div>
       <h2>Forgot Password</h2>
       <form onSubmit={handleSubmit}>
-        <div>
-          <label>Email:</label>
-          <input type="email" value={email} onChange={handleEmailChange} />
-        </div>
-        <button type="submit">Submit</button>
+        <MDBInput
+          wrapperClass="mb-4"
+          label="Email address"
+          id="formControlLg"
+          type="text"
+          size="lg"
+          required
+          value={email}
+          onChange={(ev) => setEmail(ev.target.value)}
+          style={{ marginTop: "2rem" }}
+        />
+
+        <MDBBtn className="mb-0 px-5" size="lg" type="submit">
+          Submit
+        </MDBBtn>
       </form>
       {message && <p>{message}</p>}
     </div>

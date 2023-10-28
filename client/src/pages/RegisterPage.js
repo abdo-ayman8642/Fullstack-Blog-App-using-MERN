@@ -77,7 +77,6 @@ function RegisterPage() {
   };
 
   const onChangePassword = (password) => {
-    console.log(password);
     setPassword(password);
 
     validatePassword(password)
@@ -85,6 +84,11 @@ function RegisterPage() {
       : setError(
           "Password must contain at least one uppercase letter, one lowercase letter, and one numerical character."
         );
+    if (confirmPassword) {
+      confirmPassword === password
+        ? setErrorConfirm("")
+        : setErrorConfirm("Entered Password are not matched");
+    }
   };
   const onChangeConfirmPassword = (confirmedPassword) => {
     setConfirmPassword(confirmedPassword);

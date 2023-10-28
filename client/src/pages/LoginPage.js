@@ -18,6 +18,7 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [redirect, setRedirect] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState(false);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -28,7 +29,7 @@ function LoginPage() {
     ev.preventDefault();
     const response = await fetch("http://localhost:4000/login", {
       method: "POST",
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ identifier: username, password }),
       headers: { "Content-Type": "application/json" },
       credentials: "include",
     });
@@ -38,7 +39,11 @@ function LoginPage() {
         setUserInfo(userInfo);
       });
     } else {
-      alert("wrong credentials");
+      const { message } = await response.json();
+      setError(message);
+      setTimeout(() => {
+        setError(null);
+      }, 2000);
     }
   }
 
@@ -48,6 +53,15 @@ function LoginPage() {
 
   return (
     <form onSubmit={login}>
+      {error && (
+        <div
+          class={`alert alert-danger d-inline-block p-4`}
+          style={{ position: "absolute", right: "20px", bottom: 0 }}
+          role="alert"
+        >
+          <div>{error}</div>
+        </div>
+      )}
       <h1 className="fw-bold mb-5 text-center " style={{ marginTop: "50px" }}>
         Login
       </h1>

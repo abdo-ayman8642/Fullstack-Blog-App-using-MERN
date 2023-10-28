@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const ObjectId = mongoose.Types.ObjectId;
 const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
 const User = require("./models/User");
@@ -51,30 +52,41 @@ app.use("/register", async (req, res) => {
 });
 
 app.post("/login", async (req, res) => {
-  const { username, password } = req.body;
-  const userDoc = await User.findOne({ username });
+  const { identifier, password } = req.body;
+  const userDoc = await User.findOne({
+    $or: [{ username: identifier }, { email: identifier }],
+  });
   if (!userDoc) {
-    res.status(404).json("wrong credentials");
+    res.status(404).json({ message: "username or email may be incorect" });
     return;
   }
   const passOk = bcrypt.compareSync(password, userDoc?.password);
   if (passOk) {
-    jwt.sign({ username, id: userDoc._id }, secret, {}, (err, token) => {
-      if (err) throw err;
-      res.cookie("token", token).json({
-        id: userDoc._id,
-        username,
-      });
-    });
+    jwt.sign(
+      { username: userDoc.username, id: userDoc._id },
+      secret,
+      {},
+      (err, token) => {
+        if (err) throw err;
+        res.cookie("token", token).json({
+          id: userDoc._id,
+          username: userDoc.username,
+          firstname: userDoc.firstname,
+          lastname: userDoc.lastname,
+        });
+      }
+    );
   } else {
-    res.status(400).json("wrong credentials");
+    res.status(404).json({ message: "Password not valid" });
   }
 });
 
-app.get("/profile", (req, res) => {
+app.get("/profile", async (req, res) => {
   const { token } = req.cookies;
   try {
     const decoded = jwt.verify(token, secret, {});
+    const user = await User.findOne({ username: decoded.username });
+    res.status(200).json(user);
   } catch (err) {
     res.json(err);
   }
@@ -93,29 +105,57 @@ app.post("/post", uploadMiddleware.single("file"), async (req, res) => {
 
   const { token } = req.cookies;
   jwt.verify(token, secret, {}, async (err, info) => {
-    if (err) throw err;
-    const { title, summary, content } = req.body;
+    if (err) res.status(403).json(err);
+    const { title, summary, content, public } = req.body;
     const postDoc = await Post.create({
       title,
       summary,
       content,
       cover: newPath,
       author: info.id,
+      public,
     });
     res.json(postDoc);
   });
 });
 
 app.get("/post", async (req, res) => {
-  res.json(
-    await Post.find()
+  const { token } = req.cookies;
+
+  if (!token) {
+    const posts = await Post.find({
+      $or: [{ public: true }],
+    })
       .populate("author", ["username"])
       .sort({ createdAt: -1 })
-      .limit(20)
-  );
+      .limit(20);
+    res.status(200).json(posts);
+    return;
+  }
+
+  jwt.verify(token, secret, {}, async (err, info) => {
+    if (err) res.status(403).json(err);
+    const userId = new ObjectId(info.id);
+    try {
+      const posts = await Post.find({
+        $or: [{ public: true }, { author: userId }],
+      })
+        .populate("author", ["username"])
+        .sort({ createdAt: -1 })
+        .limit(20);
+      res.status(200).json(posts);
+    } catch (err) {
+      res.status(404).json(err);
+    }
+  });
 });
 
 app.get("/post/:id", async (req, res) => {
+  const { token } = req.cookies;
+  if (!token) {
+    res.status(403).json(null);
+    return;
+  }
   const { id } = req.params;
   const postDoc = await Post.findById(id).populate("author", ["username"]);
   res.json(postDoc);
@@ -134,18 +174,15 @@ app.put("/post", uploadMiddleware.single("file"), async (req, res) => {
   const { token } = req.cookies;
   jwt.verify(token, secret, {}, async (err, info) => {
     if (err) throw err;
-    const { id, title, summary, content } = req.body;
+    const { id, title, summary, content, public } = req.body;
     const postDoc = await Post.findById(id);
-    const isAuthor = JSON.stringify(postDoc.author) === JSON.stringify(info.id);
-    if (!isAuthor) {
-      return res.status(400).json("you are not the author");
-    }
 
     await postDoc.updateOne({
       title,
       summary,
       content,
       cover: newPath ? newPath : postDoc.cover,
+      public,
     });
 
     res.json(postDoc);
@@ -233,12 +270,11 @@ app.post("/forgot-password", async (req, res) => {
 });
 
 app.post("/reset-password", async (req, res) => {
-  const { email, resetCode, newPassword } = req.body;
+  const { email, resetCode, password } = req.body;
 
   try {
     // Find the user by their email
     const user = await User.findOne({ email });
-
     if (user) {
       // Check if the reset code matches and is not expired
       if (
@@ -246,7 +282,7 @@ app.post("/reset-password", async (req, res) => {
         user.resetCodeExpiration > new Date()
       ) {
         // Reset the user's password
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
         user.password = hashedPassword;
         user.resetCode = undefined;
         user.resetCodeExpiration = undefined;
